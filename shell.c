@@ -86,6 +86,7 @@ int cmd_pwd(unused struct tokens *tokens){
     return 1;
 }
 
+/* Changes current working directory */
 int cmd_cd(struct tokens *tokens){
     if(chdir(tokens->tokens[1]) == -1){
 	printf("No such file or directory\n");
@@ -96,7 +97,22 @@ int cmd_cd(struct tokens *tokens){
 /* Execute program */                                                                                
 int shell_exec(struct tokens *tokens){                                                               
 	char *path = tokens_get_token(tokens, 0);
-	char **args = (char **)(tokens->tokens + strlen(path) * sizeof(char) - 1); 
+	char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
+	for (int i = 1; i < tokens->tokens_length; i++){
+		args[i] = tokens_get_token(tokens, i);
+	}
+	pid_t cpid;
+	int status;	
+ 	cpid = fork();
+	/* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
+	if (cpid > 0) { 
+		wait(&status);
+	} else if (cpid == 0){
+		execv(path, args);
+		exit(0);
+	} else {
+		exit(1);
+	}
 	return 1;
 }
 
@@ -124,7 +140,7 @@ void init_shell() {
       kill(-shell_pgid, SIGTTIN);
 
     /* Saves the shell's process id */
-    shell_pgid = getpid();
+   shell_pgid = getpid();
 
     /* Take control of the terminal */
     tcsetpgrp(shell_terminal, shell_pgid);
