@@ -97,15 +97,6 @@ int cmd_cd(struct tokens *tokens){
 int shell_exec(struct tokens *tokens){                                                               
 	char *path = tokens_get_token(tokens, 0);
 	char **args = (char **)(tokens->tokens + strlen(path) * sizeof(char) - 1); 
-	int status;
-	pid_t child_id;
-	child_id = fork();
-	if (child_id == 0){
-	//	wait(&status);
-		printf("%d", execv(path, args));
-	}else{
-		printf("Lol\n");
-	}
 	return 1;
 }
 
