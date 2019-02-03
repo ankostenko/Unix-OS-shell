@@ -1,5 +1,10 @@
 shell
 Makefile
+
+# shell swap files
+*.shell.*
+*.shell
+
 =======
 # Prerequisites
 *.d
