@@ -9,6 +9,8 @@
 #include <sys/wait.h>
 #include <termios.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <dirent.h>
 
 #include "tokenizer.h"
 
@@ -42,6 +44,9 @@ int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
+char *procpathenv(char *, char *);
+
+const int MAX_PATH_SIZE = 128;
 
 /* Built-in command functions take token array (see parse.h) and return int */
 typedef int cmd_fun_t(struct tokens *tokens);
@@ -74,7 +79,6 @@ int cmd_exit(unused struct tokens *tokens) {
 
 /* Prints current working directory */
 int cmd_pwd(unused struct tokens *tokens){
-    const int MAX_PATH_SIZE = 128;
     char *path_buff = NULL;
     path_buff = (char *)malloc(sizeof(char) * MAX_PATH_SIZE);
     if (!path_buff) 
@@ -118,6 +122,57 @@ int shell_exec(struct tokens *tokens){
     return 1;
 }
 
+/*
+    Shell can use both absolute path and relative path.
+    TODO: shell should use PATH variables to lookup programs 
+    1. Determine whether is there the symbol '/'.
+    2. If it does then path is absolute, so we just use it.
+    3. If it doesn't then either it is a relative path and we use it or it is name of the program.
+    4. If it's a name so we lookup in the current working directory.
+    5. If it absent we lookup on the PATH environment.
+ */
+char* detpath(char *ppath){
+    /* ppath is absolute path  */
+    if (*ppath == '/')
+        return ppath;
+
+    /* Maybe dir would be opened and not closed. */
+    if (opendir(ppath)){
+        /* A component of ppath is not a directory so it's a name of the program */
+        if (errno == ENOENT){
+            /* enpath - path from PATH  environment variable concatenated w/ name of the program */
+            char *enpath = procpathenv(getenv("PATH"), ppath);
+            if (!enpath) return NULL;
+            return enpath; 
+        }
+    }
+
+    /* ppath is relative path */
+    return ppath;
+}
+
+/* process PATH environment variables */
+char* procpathenv(char* env, char *name){
+    static char *path = NULL;
+    path = (char *)malloc(sizeof(char) * MAX_PATH_SIZE);
+    if (!path) return NULL;
+
+    int i = 0;
+    for (char *c = env; *c != '\000'; c++, i++){
+        if (*c == ':'){
+            if (!stat(strcat(path, name), NULL))
+                break;
+
+            i = -1;
+            continue;
+        }
+        *(path + i) = *c;
+    }
+    
+    path[i] = '\000';
+    return path;
+}
+
 /* Looks up the built-in command, if it exists. */
 int lookup(char cmd[]) {
     for (unsigned int i = 0; i < sizeof(cmd_table) / sizeof(fun_desc_t); i++)
@@ -141,7 +196,7 @@ void init_shell() {
         while (tcgetpgrp(shell_terminal) != (shell_pgid = getpgrp()))
             kill(-shell_pgid, SIGTTIN);
 
-        /* Saves the shell's process id */
+       /* Saves the shell's process id */
         shell_pgid = getpid();
 
         /* Take control of the terminal */
