@@ -5,3 +5,4 @@
   - pwd
   - cd 
   - program execution
+  - path resolution
