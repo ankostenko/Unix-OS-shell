@@ -103,9 +103,11 @@ int shell_exec(struct tokens *tokens){
     /* path processed by detpath and then we could use it */ 
     char *path = detpath(tokens_get_token(tokens, 0));
     char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
-    for (int i = 0; i < tokens->tokens_length; i++){
+    int i;
+    for (i = 0; i < tokens->tokens_length; i++){
         args[i] = tokens_get_token(tokens, i);
     }
+    args[i] = NULL;
     pid_t cpid;
     int status;	
     cpid = fork();
@@ -137,7 +139,7 @@ char* detpath(char *ppath){
         return ppath;
 
     /* Maybe dir would be opened and not closed. */
-    if (opendir(ppath)){
+    if (!opendir(ppath)){
         /* A component of ppath is not a directory so it's a name of the program */
         if (errno == ENOENT){
             /* enpath - path from PATH  environment variable concatenated w/ name of the program */
@@ -156,11 +158,11 @@ char* procpathenv(char* env, char *name){
     static char *path = NULL;
     path = (char *)malloc(sizeof(char) * MAX_PATH_SIZE);
     if (!path) return NULL;
-
+    struct stat statbuf;
     int i = 0;
     for (char *c = env; *c != '\000'; c++, i++){
         if (*c == ':'){
-            if (!stat(strcat(path, name), NULL))
+            if (!stat(strcat(path, name), &statbuf))
                 break;
 
             i = -1;
@@ -169,7 +171,6 @@ char* procpathenv(char* env, char *name){
         *(path + i) = *c;
     }
     
-    path[i] = '\000';
     return path;
 }
 
