@@ -98,7 +98,7 @@ int cmd_cd(struct tokens *tokens){
 int shell_exec(struct tokens *tokens){                                                               
 	char *path = tokens_get_token(tokens, 0);
 	char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
-	for (int i = 1; i < tokens->tokens_length; i++){
+	for (int i = 0; i < tokens->tokens_length; i++){
 		args[i] = tokens_get_token(tokens, i);
 	}
 	pid_t cpid;
@@ -108,9 +108,11 @@ int shell_exec(struct tokens *tokens){
 	if (cpid > 0) { 
 		wait(&status);
 	} else if (cpid == 0){
+		/* executes program according to path and given arguments */
 		execv(path, args);
 		exit(0);
 	} else {
+		/* cannot fork current process */
 		exit(1);
 	}
 	return 1;
