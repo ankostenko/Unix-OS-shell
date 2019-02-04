@@ -1,5 +1,4 @@
 shell
-Makefile
 
 # shell swap files
 *.shell.*
