@@ -45,7 +45,7 @@ int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
 char *procpathenv(char *, char *);
-
+char *detpath(char *);
 const int MAX_PATH_SIZE = 128;
 
 /* Built-in command functions take token array (see parse.h) and return int */
@@ -99,8 +99,9 @@ int cmd_cd(struct tokens *tokens){
 }
 
 /* Execute program */                                                                                
-int shell_exec(struct tokens *tokens){                                                               
-    char *path = tokens_get_token(tokens, 0);
+int shell_exec(struct tokens *tokens){
+    /* path processed by detpath and then we could use it */ 
+    char *path = detpath(tokens_get_token(tokens, 0));
     char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
     for (int i = 0; i < tokens->tokens_length; i++){
         args[i] = tokens_get_token(tokens, i);
@@ -124,7 +125,6 @@ int shell_exec(struct tokens *tokens){
 
 /*
     Shell can use both absolute path and relative path.
-    TODO: shell should use PATH variables to lookup programs 
     1. Determine whether is there the symbol '/'.
     2. If it does then path is absolute, so we just use it.
     3. If it doesn't then either it is a relative path and we use it or it is name of the program.
