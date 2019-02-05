@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 #include "tokenizer.h"
 
@@ -103,11 +104,28 @@ int shell_exec(struct tokens *tokens){
     /* path processed by detpath and then we could use it */ 
     char *path = detpath(tokens_get_token(tokens, 0));
     char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
-    int i;
-    for (i = 0; i < tokens->tokens_length; i++){
-        args[i] = tokens_get_token(tokens, i);
+    int i, j;
+    args[0] = path;
+    for (i = 1, j = 1; j < tokens->tokens_length; j++){
+        if (!strcmp(tokens_get_token(tokens, j), "<") || !strcmp(tokens_get_token(tokens, j), ">")) continue;
+        args[i] = tokens_get_token(tokens, j);
+        i++;
     }
     args[i] = NULL;
+
+    int filedesc;
+    if (tokens->tokens_length > 2){
+        filedesc = open(args[1], O_CREAT|O_TRUNC|O_WRONLY);
+        if (filedesc == -1)
+            return -1;
+        if (!strcmp(args[1], "<")){
+            
+        }else if (!strcmp(args[1], ">")){
+            if (dup2(filedesc, 1) < 0)
+                return -1;
+        }
+    }
+
     pid_t cpid;
     int status;	
     cpid = fork();
@@ -117,6 +135,7 @@ int shell_exec(struct tokens *tokens){
     } else if (cpid == 0){
         /* executes program according to path and given arguments */
         execv(path, args);
+   //     close(filedesc);
         exit(0);
     } else {
         /* cannot fork current process */
