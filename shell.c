@@ -45,8 +45,13 @@ int cmd_exit(struct tokens *tokens);
 int cmd_help(struct tokens *tokens);
 int cmd_pwd(struct tokens *tokens);
 int cmd_cd(struct tokens *tokens);
+
 char *procpathenv(char *, char *);
 char *detpath(char *);
+char **args_proc(char *, struct tokens *);
+
+int redirection(char *, int);
+
 const int MAX_PATH_SIZE = 128;
 
 /* Built-in command functions take token array (see parse.h) and return int */
@@ -100,31 +105,13 @@ int cmd_cd(struct tokens *tokens){
 }
 
 /* Execute program */                                                                                
+/*
+
+*/
 int shell_exec(struct tokens *tokens){
     /* path processed by detpath and then we could use it */ 
     char *path = detpath(tokens_get_token(tokens, 0));
-    char **args = (char **)malloc(tokens->tokens_length * sizeof(char *));
-    int i, j;
-    args[0] = path;
-    for (i = 1, j = 1; j < tokens->tokens_length; j++){
-        if (!strcmp(tokens_get_token(tokens, j), "<") || !strcmp(tokens_get_token(tokens, j), ">")) continue;
-        args[i] = tokens_get_token(tokens, j);
-        i++;
-    }
-    args[i] = NULL;
-
-    int filedesc;
-    if (tokens->tokens_length > 2){
-        filedesc = open(args[1], O_CREAT|O_TRUNC|O_WRONLY);
-        if (filedesc == -1)
-            return -1;
-        if (!strcmp(args[1], "<")){
-            
-        }else if (!strcmp(args[1], ">")){
-            if (dup2(filedesc, 1) < 0)
-                return -1;
-        }
-    }
+    char **args = args_proc(path, tokens);    
 
     pid_t cpid;
     int status;	
@@ -135,13 +122,52 @@ int shell_exec(struct tokens *tokens){
     } else if (cpid == 0){
         /* executes program according to path and given arguments */
         execv(path, args);
-   //     close(filedesc);
         exit(0);
     } else {
         /* cannot fork current process */
         exit(1);
     }
     return 1;
+}
+
+/* processes arguments to determine what is this redirection or merely arguments passing */
+char** args_proc(char *path, struct tokens *tokens){
+    int i;
+    char **args = (char **)malloc((tokens->tokens_length + 1) * sizeof(char *));
+    if (!args) exit(1);
+    
+    args[0] = path;
+    for (i = 1; i < tokens->tokens_length; i++)
+        args[i] = tokens_get_token(tokens, i);
+    args[i] = NULL;
+
+    /* is it redirection? */
+    if (!strcmp(args[1], ">") || !strcmp(args[1], "<")){
+        if (!strcmp(args[1], ">")){
+        /* this is not really good solution, because it doesn't allow a pipe */
+            redirection(args[2], 1);
+        }else{
+            redirection(args[2], 0);
+        }
+        args[1] = NULL;
+    }else{
+        /* arguments passing */
+        args[tokens->tokens_length - 1] = NULL;
+    }
+
+    return args;
+}
+
+/* redirect stdin or stdout depends on stream */
+int redirection(char *path, int stream){
+   int fd;
+
+    fd = open(path, O_CREAT|O_TRUNC|O_WRONLY); 
+    if (fd == -1) return -1;
+
+    if (dup2(fd, stream) < 0) return -1;
+
+    return 0; 
 }
 
 /*
