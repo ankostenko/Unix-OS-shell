@@ -1,5 +1,6 @@
 shell
 tags
+test
 
 # shell swap files
 *.shell.*
