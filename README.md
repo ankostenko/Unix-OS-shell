@@ -6,3 +6,4 @@
   - cd 
   - program execution
   - path resolution
+  - i/o redirection (not working)
