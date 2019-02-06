@@ -1,0 +1,53 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+CC	Makefile	/^CC=gcc$/;"	m
+CFLAGS	Makefile	/^CFLAGS=-g -Wall -std=gnu99$/;"	m
+EXECUTABLES	Makefile	/^EXECUTABLES=shell$/;"	m
+LDFLAGS	Makefile	/^LDFLAGS=$/;"	m
+MAX_PATH_SIZE	shell.c	/^const int MAX_PATH_SIZE = 128;$/;"	v
+OBJS	Makefile	/^OBJS=$(SRCS:.c=.o)$/;"	m
+SRCS	Makefile	/^SRCS=shell.c tokenizer.c$/;"	m
+args_proc	shell.c	/^char** args_proc(char *path, struct tokens *tokens){$/;"	f
+buffers	shell.c	/^    char **buffers;$/;"	m	struct:tokens	file:
+buffers	tokenizer.c	/^  char **buffers;$/;"	m	struct:tokens	file:
+buffers_length	shell.c	/^    size_t buffers_length;$/;"	m	struct:tokens	file:
+buffers_length	tokenizer.c	/^  size_t buffers_length;$/;"	m	struct:tokens	file:
+cmd	shell.c	/^    char *cmd;$/;"	m	struct:fun_desc	file:
+cmd_cd	shell.c	/^int cmd_cd(struct tokens *tokens){$/;"	f
+cmd_exit	shell.c	/^int cmd_exit(unused struct tokens *tokens) {$/;"	f
+cmd_fun_t	shell.c	/^typedef int cmd_fun_t(struct tokens *tokens);$/;"	t	file:
+cmd_help	shell.c	/^int cmd_help(unused struct tokens *tokens) {$/;"	f
+cmd_pwd	shell.c	/^int cmd_pwd(unused struct tokens *tokens){$/;"	f
+cmd_table	shell.c	/^fun_desc_t cmd_table[] = {$/;"	v
+copy_word	tokenizer.c	/^static void *copy_word(char *source, size_t n) {$/;"	f	file:
+detpath	shell.c	/^char* detpath(char *ppath){$/;"	f
+doc	shell.c	/^    char *doc;$/;"	m	struct:fun_desc	file:
+fun	shell.c	/^    cmd_fun_t *fun;$/;"	m	struct:fun_desc	file:
+fun_desc	shell.c	/^typedef struct fun_desc {$/;"	s	file:
+fun_desc_t	shell.c	/^} fun_desc_t;$/;"	t	typeref:struct:fun_desc	file:
+init_shell	shell.c	/^void init_shell() {$/;"	f
+lookup	shell.c	/^int lookup(char cmd[]) {$/;"	f
+main	shell.c	/^int main(unused int argc, unused char *argv[]) {$/;"	f
+procpathenv	shell.c	/^char* procpathenv(char* env, char *name){$/;"	f
+redirection	shell.c	/^int redirection(char *path, int stream){$/;"	f
+shell_exec	shell.c	/^int shell_exec(struct tokens *tokens){$/;"	f
+shell_is_interactive	shell.c	/^bool shell_is_interactive;$/;"	v
+shell_pgid	shell.c	/^pid_t shell_pgid;$/;"	v
+shell_terminal	shell.c	/^int shell_terminal;$/;"	v
+shell_tmodes	shell.c	/^struct termios shell_tmodes;$/;"	v	typeref:struct:termios
+tokenize	tokenizer.c	/^struct tokens *tokenize(const char *line) {$/;"	f
+tokens	shell.c	/^    char **tokens;$/;"	m	struct:tokens	file:
+tokens	shell.c	/^struct tokens{$/;"	s	file:
+tokens	tokenizer.c	/^  char **tokens;$/;"	m	struct:tokens	file:
+tokens	tokenizer.c	/^struct tokens {$/;"	s	file:
+tokens_destroy	tokenizer.c	/^void tokens_destroy(struct tokens *tokens) {$/;"	f
+tokens_get_length	tokenizer.c	/^size_t tokens_get_length(struct tokens *tokens) {$/;"	f
+tokens_get_token	tokenizer.c	/^char *tokens_get_token(struct tokens *tokens, size_t n) {$/;"	f
+tokens_length	shell.c	/^    size_t tokens_length;$/;"	m	struct:tokens	file:
+tokens_length	tokenizer.c	/^  size_t tokens_length;$/;"	m	struct:tokens	file:
+unused	shell.c	19;"	d	file:
+vector_push	tokenizer.c	/^static void *vector_push(char ***pointer, size_t *size, void *elem) {$/;"	f	file:

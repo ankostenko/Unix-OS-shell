@@ -148,7 +148,7 @@ char** args_proc(char *path, struct tokens *tokens){
     /* is it redirection? */
     if (!strcmp(args[1], ">") || !strcmp(args[1], "<")){
         if (!strcmp(args[1], ">")){
-        /* this is not really good solution, because it doesn't allow a pipe */
+            /* this is not really good solution, because it doesn't allow a pipe */
             redirection(args[2], 1);
         }else{
             redirection(args[2], 0);
@@ -164,7 +164,7 @@ char** args_proc(char *path, struct tokens *tokens){
 
 /* redirect stdin or stdout depends on stream */
 int redirection(char *path, int stream){
-   int fd;
+    int fd;
 
     fd = open(path, O_NONBLOCK); 
     if (fd == -1) return -1;
@@ -180,7 +180,7 @@ int redirection(char *path, int stream){
     2. If it does then path is absolute, so we just use it.
     3. If it doesn't then either it is a relative path and we use it or it is name of the program.
     4. If it's a name so we lookup in the current working directory.
-    5. If it absent we lookup on the PATH environment.
+    5. If it absent we lookup on the PATH environment variables.
  */
 char* detpath(char *ppath){
     /* ppath is absolute path  */
@@ -211,8 +211,12 @@ char* procpathenv(char* env, char *name){
     int i = 0;
     for (char *c = env; *c != '\000'; c++, i++){
         if (*c == ':'){
-            if (!stat(strcat(path, name), &statbuf))
+            if (*(path + i - 1) != '/')
+                *(path + i) = '/';
+            *(path + i + 1) = '\000';
+            if (!stat(strcat(path, name), &statbuf)){
                 break;
+            }
 
             i = -1;
             continue;
