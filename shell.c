@@ -106,7 +106,11 @@ int cmd_cd(struct tokens *tokens){
 
 /* Execute program */                                                                                
 /*
-
+    So what have I found?
+    FIXME: program corrupts it own files
+    FIXME: '>' creates executable files  
+    FIXME: '<' not even works 
+    FIXME: core fault 
 */
 int shell_exec(struct tokens *tokens){
     /* path processed by detpath and then we could use it */ 
@@ -162,7 +166,7 @@ char** args_proc(char *path, struct tokens *tokens){
 int redirection(char *path, int stream){
    int fd;
 
-    fd = open(path, O_CREAT|O_TRUNC|O_WRONLY); 
+    fd = open(path, O_NONBLOCK); 
     if (fd == -1) return -1;
 
     if (dup2(fd, stream) < 0) return -1;
