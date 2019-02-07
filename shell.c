@@ -109,20 +109,28 @@ int cmd_cd(struct tokens *tokens){
     So what have I found?
     FIXME: program corrupts it own files
     FIXME: '>' creates executable files  
-    FIXME: '<' not even works 
     FIXME: core fault 
+    FIXME: '<' after using stops work of the shell
 */
 int shell_exec(struct tokens *tokens){
     /* path processed by detpath and then we could use it */ 
     char *path = detpath(tokens_get_token(tokens, 0));
     char **args = args_proc(path, tokens);    
+    
+    if (!path || !args) return -1;
 
+    int saved_stdout = dup(1);
+    int saved_stdin = dup(0);
     pid_t cpid;
     int status;	
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
         wait(&status);
+        fflush(stdout);
+        fflush(stdin);
+        dup2(saved_stdout, 1);
+        dup2(saved_stdin, 0);
     } else if (cpid == 0){
         /* executes program according to path and given arguments */
         execv(path, args);
@@ -180,6 +188,8 @@ int redirection(char *path, int stream){
     5. If it absent we lookup on the PATH environment variables.
  */
 char* detpath(char *ppath){
+    if (ppath == NULL)
+        return NULL;
     /* ppath is absolute path  */
     if (*ppath == '/')
         return ppath;
