@@ -146,7 +146,7 @@ char** args_proc(char *path, struct tokens *tokens){
     args[i] = NULL;
 
     /* is it redirection? */
-    if (!strcmp(args[1], ">") || !strcmp(args[1], "<")){
+    if (args[1] != NULL && (!strcmp(args[1], ">") || !strcmp(args[1], "<"))){
         if (!strcmp(args[1], ">")){
             /* this is not really good solution, because it doesn't allow a pipe */
             redirection(args[2], 1);
@@ -154,9 +154,6 @@ char** args_proc(char *path, struct tokens *tokens){
             redirection(args[2], 0);
         }
         args[1] = NULL;
-    }else{
-        /* arguments passing */
-        args[tokens->tokens_length - 1] = NULL;
     }
 
     return args;
