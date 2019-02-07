@@ -128,7 +128,7 @@ int shell_exec(struct tokens *tokens){
     if (cpid > 0) { 
         wait(&status);
         fflush(stdout);
-        fflush(stdin);
+//        fflush(stdin);
         dup2(saved_stdout, 1);
         dup2(saved_stdin, 0);
     } else if (cpid == 0){
