@@ -119,18 +119,14 @@ int shell_exec(struct tokens *tokens){
     
     if (!path || !args) return -1;
 
-    int saved_stdout = dup(1);
-    int saved_stdin = dup(0);
+    int saved_stdout = dup(fileno(stdout));
+    int saved_stdin = dup(fileno(stdin));
     pid_t cpid;
     int status;	
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
         wait(&status);
-        fflush(stdout);
-//        fflush(stdin);
-        dup2(saved_stdout, 1);
-        dup2(saved_stdin, 0);
     } else if (cpid == 0){
         /* executes program according to path and given arguments */
         execv(path, args);
@@ -139,6 +135,13 @@ int shell_exec(struct tokens *tokens){
         /* cannot fork current process */
         exit(1);
     }
+
+    dup2(saved_stdin, fileno(stdin));
+    dup2(saved_stdout, fileno(stdout));
+    fflush(stdout);
+    fflush(stdin);
+    close(saved_stdin);
+    close(saved_stdout);
     return 1;
 }
 
@@ -157,9 +160,9 @@ char** args_proc(char *path, struct tokens *tokens){
     if (args[1] != NULL && (!strcmp(args[1], ">") || !strcmp(args[1], "<"))){
         if (!strcmp(args[1], ">")){
             /* this is not really good solution, because it doesn't allow a pipe */
-            redirection(args[2], 1);
+            redirection(args[2], fileno(stdout));
         }else{
-            redirection(args[2], 0);
+            redirection(args[2], fileno(stdin));
         }
         args[1] = NULL;
     }
@@ -171,7 +174,7 @@ char** args_proc(char *path, struct tokens *tokens){
 int redirection(char *path, int stream){
     int fd;
 
-    fd = open(path, O_NONBLOCK); 
+    fd = open(path, O_RDWR|O_CREAT, 0644); 
     if (fd == -1) return -1;
 
     if (dup2(fd, stream) < 0) return -1;
