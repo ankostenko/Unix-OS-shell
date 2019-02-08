@@ -113,14 +113,15 @@ int cmd_cd(struct tokens *tokens){
     FIXME: '<' after using stops work of the shell
 */
 int shell_exec(struct tokens *tokens){
+    int saved_stdout = dup(fileno(stdout));
+    int saved_stdin = dup(fileno(stdin));
+
     /* path processed by detpath and then we could use it */ 
     char *path = detpath(tokens_get_token(tokens, 0));
     char **args = args_proc(path, tokens);    
     
     if (!path || !args) return -1;
 
-    int saved_stdout = dup(fileno(stdout));
-    int saved_stdin = dup(fileno(stdin));
     pid_t cpid;
     int status;	
     cpid = fork();
