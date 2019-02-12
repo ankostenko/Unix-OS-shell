@@ -105,7 +105,14 @@ int cmd_cd(struct tokens *tokens){
 }
 
 /* Execute program */                                                                                
+/*
+    Signal handling.
+    1. I need to separate all subprocesses into their own pgids(process group ids)
+    2. Set current subprocess on the foreground (assumed that only latest process goes to foreground)
+    3. Properly handle all receiving signal they must affect only on the foreground processes.
+*/
 int shell_exec(struct tokens *tokens){
+    /* saves descriptors associated with stdout and stdin */
     int saved_stdout = dup(fileno(stdout));
     int saved_stdin = dup(fileno(stdin));
 
@@ -122,6 +129,9 @@ int shell_exec(struct tokens *tokens){
     if (cpid > 0) { 
         wait(&status);
     } else if (cpid == 0){
+        /* set process group id */
+//        setpgid(getpid(), 0);
+        //tcsetpgrp(0, getpgid(getpid()));
         /* executes program according to path and given arguments */
         execv(path, args);
         exit(0);
