@@ -105,13 +105,6 @@ int cmd_cd(struct tokens *tokens){
 }
 
 /* Execute program */                                                                                
-/*
-    So what have I found?
-    FIXME: program corrupts it own files
-    FIXME: '>' creates executable files  
-    FIXME: core fault 
-    FIXME: '<' after using stops work of the shell
-*/
 int shell_exec(struct tokens *tokens){
     int saved_stdout = dup(fileno(stdout));
     int saved_stdin = dup(fileno(stdin));
@@ -137,6 +130,7 @@ int shell_exec(struct tokens *tokens){
         exit(1);
     }
 
+    /* restore stdout and stdin to console input and output */
     dup2(saved_stdin, fileno(stdin));
     dup2(saved_stdout, fileno(stdout));
     fflush(stdout);
