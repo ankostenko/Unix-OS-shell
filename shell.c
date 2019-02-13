@@ -51,6 +51,8 @@ char *detpath(char *);
 char **args_proc(char *, struct tokens *);
 
 int redirection(char *, int);
+void parent_sig_handler();
+void child_sig_handler();
 
 const int MAX_PATH_SIZE = 128;
 
@@ -127,11 +129,16 @@ int shell_exec(struct tokens *tokens){
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
+        parent_sig_handler();
+
+        pid_t pid = getpid();
+        setpgid(pid, 0);
+        pid_t pgid = getpgid(0);
+        tcsetpgrp(0, pgid);
+
         wait(&status);
     } else if (cpid == 0){
-        /* set process group id */
-//        setpgid(getpid(), 0);
-        //tcsetpgrp(0, getpgid(getpid()));
+        child_sig_handler();
         /* executes program according to path and given arguments */
         execv(path, args);
         exit(0);
@@ -148,6 +155,18 @@ int shell_exec(struct tokens *tokens){
     close(saved_stdin);
     close(saved_stdout);
     return 1;
+}
+
+void parent_sig_handler(){
+    signal(SIGINT, SIG_IGN);
+    signal(SIGTSTP, SIG_IGN);
+    signal(SIGQUIT, SIG_IGN);
+}
+
+void child_sig_handler(){
+    signal(SIGINT, SIG_DFL);
+    signal(SIGTSTP, SIG_DFL);
+    signal(SIGQUIT, SIG_DFL);
 }
 
 /* processes arguments to determine what is this redirection or merely arguments passing */
