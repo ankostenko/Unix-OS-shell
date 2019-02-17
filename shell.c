@@ -132,7 +132,7 @@ int shell_exec(struct tokens *tokens){
         setpgid(cpid, 0);
         tcsetpgrp(0, cpid);
         
-        wait(&status);
+        waitpid(-1, &status, WUNTRACED);
         /* return shell to the foreground */
         tcsetpgrp(0, getpid());
     } else if (cpid == 0){
