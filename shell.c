@@ -128,12 +128,13 @@ int shell_exec(struct tokens *tokens){
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
-        pid_t f = tcgetpgrp(cpid);
+        /* set children process to foreground  */
         setpgid(cpid, 0);
         tcsetpgrp(0, cpid);
-        f = tcgetpgrp(cpid);
-
+        
         wait(&status);
+        /* return shell to the foreground */
+        tcsetpgrp(0, getpid());
     } else if (cpid == 0){
         child_sig_handler();
         /* create new session for background processing */
@@ -143,8 +144,6 @@ int shell_exec(struct tokens *tokens){
 
         /* executes program according to path and given arguments */
         execv(path, args);
-        tcgetpgrp(getppid());
-        exit(0);
     } else {
         /* cannot fork current process */
         exit(1);
@@ -153,8 +152,6 @@ int shell_exec(struct tokens *tokens){
     /* restore stdout and stdin to console input and output */
     dup2(saved_stdin, fileno(stdin));
     dup2(saved_stdout, fileno(stdout));
-    fflush(stdout);
-    fflush(stdin);
     close(saved_stdin);
     close(saved_stdout);
     return 1;
@@ -281,6 +278,7 @@ void init_shell() {
         while (tcgetpgrp(shell_terminal) != (shell_pgid = getpgrp()))
             kill(-shell_pgid, SIGTTIN);
 
+        /* Ignore interactive and job-control signals.  */
         signal (SIGINT, SIG_IGN);
         signal (SIGQUIT, SIG_IGN);
         signal (SIGTSTP, SIG_IGN);
