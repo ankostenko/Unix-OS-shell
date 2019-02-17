@@ -51,7 +51,6 @@ char *detpath(char *);
 char **args_proc(char *, struct tokens *);
 
 int redirection(char *, int);
-void parent_sig_handler();
 void child_sig_handler();
 
 const int MAX_PATH_SIZE = 128;
@@ -129,18 +128,22 @@ int shell_exec(struct tokens *tokens){
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
-        parent_sig_handler();
-
-        pid_t pid = getpid();
-        setpgid(pid, 0);
-        pid_t pgid = getpgid(0);
-        tcsetpgrp(0, pgid);
+        pid_t f = tcgetpgrp(cpid);
+        setpgid(cpid, 0);
+        tcsetpgrp(0, cpid);
+        f = tcgetpgrp(cpid);
 
         wait(&status);
     } else if (cpid == 0){
         child_sig_handler();
+        /* create new session for background processing */
+        if (!strcmp(args[tokens->tokens_length - 1], "&")){
+            setsid();
+        }
+
         /* executes program according to path and given arguments */
         execv(path, args);
+        tcgetpgrp(getppid());
         exit(0);
     } else {
         /* cannot fork current process */
@@ -155,12 +158,6 @@ int shell_exec(struct tokens *tokens){
     close(saved_stdin);
     close(saved_stdout);
     return 1;
-}
-
-void parent_sig_handler(){
-    signal(SIGINT, SIG_IGN);
-    signal(SIGTSTP, SIG_IGN);
-    signal(SIGQUIT, SIG_IGN);
 }
 
 void child_sig_handler(){
@@ -283,6 +280,13 @@ void init_shell() {
          * foreground, we'll receive a SIGCONT. */
         while (tcgetpgrp(shell_terminal) != (shell_pgid = getpgrp()))
             kill(-shell_pgid, SIGTTIN);
+
+        signal (SIGINT, SIG_IGN);
+        signal (SIGQUIT, SIG_IGN);
+        signal (SIGTSTP, SIG_IGN);
+        signal (SIGTTIN, SIG_IGN);
+        signal (SIGTTOU, SIG_IGN);
+        signal (SIGCHLD, SIG_IGN);
 
        /* Saves the shell's process id */
         shell_pgid = getpid();
