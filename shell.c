@@ -138,7 +138,7 @@ int shell_exec(struct tokens *tokens){
     } else if (cpid == 0){
         child_sig_handler();
         /* create new session for background processing */
-        if (!strcmp(args[tokens->tokens_length - 1], "&")){
+        if (!strcmp(tokens_get_token(tokens, tokens->tokens_length - 1), "&")){
             setsid();
         }
 
