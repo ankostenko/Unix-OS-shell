@@ -128,10 +128,6 @@ int shell_exec(struct tokens *tokens){
             put_process_in_foreground(cpid);
     } else if (cpid == 0){
         child_sig_handler();
-        /* create new session for background processing */
-        if (!strcmp(tokens_get_token(tokens, tokens->tokens_length - 1), "&")){
-            setsid();
-        }
 
         /* executes program according to path and given arguments */
         execv(path, args);
