@@ -147,13 +147,13 @@ int shell_exec(struct tokens *tokens){
 void put_process_in_foreground(int pid){
     int status;
     /* put the process with specified id in the foreground.  */
-    tcsetpgrp(STDIN_FILENO, pid);
+    tcsetpgrp(0, pid);
 
     /* wait until it is done  */
-    waitpid(-1, &status, WUNTRACED);
+    waitpid(pid, &status, WUNTRACED);
     
     /* Put the shell back in the foreground.  */ 
-    tcsetpgrp(STDIN_FILENO, getpid());
+    tcsetpgrp(0, getpid());
 }
 
 void child_sig_handler(){
