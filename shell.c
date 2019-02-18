@@ -52,6 +52,7 @@ char **args_proc(char *, struct tokens *);
 
 int redirection(char *, int);
 void child_sig_handler();
+void put_process_in_foreground(int);
 
 const int MAX_PATH_SIZE = 128;
 
@@ -106,12 +107,6 @@ int cmd_cd(struct tokens *tokens){
 }
 
 /* Execute program */                                                                                
-/*
-    Signal handling.
-    1. I need to separate all subprocesses into their own pgids(process group ids)
-    2. Set current subprocess on the foreground (assumed that only latest process goes to foreground)
-    3. Properly handle all receiving signal they must affect only on the foreground processes.
-*/
 int shell_exec(struct tokens *tokens){
     /* saves descriptors associated with stdout and stdin */
     int saved_stdout = dup(fileno(stdout));
@@ -124,17 +119,13 @@ int shell_exec(struct tokens *tokens){
     if (!path || !args) return -1;
 
     pid_t cpid;
-    int status;	
     cpid = fork();
     /* cpid > 0 - parent process, cpid == 0 - child process, cpid < 0 - error */
     if (cpid > 0) { 
         /* set children process to foreground  */
         setpgid(cpid, 0);
-        tcsetpgrp(0, cpid);
-        
-        waitpid(-1, &status, WUNTRACED);
-        /* return shell to the foreground */
-        tcsetpgrp(0, getpid());
+        if (strcmp(tokens_get_token(tokens, tokens->tokens_length - 1), "&"))
+            put_process_in_foreground(cpid);
     } else if (cpid == 0){
         child_sig_handler();
         /* create new session for background processing */
@@ -155,6 +146,18 @@ int shell_exec(struct tokens *tokens){
     close(saved_stdin);
     close(saved_stdout);
     return 1;
+}
+
+void put_process_in_foreground(int pid){
+    int status;
+    /* put the process with specified id in the foreground.  */
+    tcsetpgrp(STDIN_FILENO, pid);
+
+    /* wait until it is done  */
+    waitpid(-1, &status, WUNTRACED);
+    
+    /* Put the shell back in the foreground.  */ 
+    tcsetpgrp(STDIN_FILENO, getpid());
 }
 
 void child_sig_handler(){
